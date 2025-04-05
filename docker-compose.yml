@@ -1,0 +1,14 @@
+services:
+  sentiments:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sentiments
+    expose:
+      - 65535:65535
+    networks:
+      - careerspeak
+
+networks:
+  careerspeak:
+    external: true

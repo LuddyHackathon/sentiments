@@ -1,48 +1,23 @@
+import os
+import requests
 import json
-from transformers import pipeline
 
-# Load the emotion classification model
-emotion_classifier = pipeline('text-classification', model='bhadresh-savani/distilbert-base-uncased-emotion')
+from dotenv import load_dotenv
 
-# Example summarized transcript from a meeting
-meeting_summary = """
-In today's meeting, the team discussed the upcoming product launch and the marketing strategies involved. 
-There was a consensus on the timeline, but some concerns were raised about the budget allocation and the resource distribution. 
-Everyone agreed that more discussion is needed to finalize the advertising channels. The team expressed excitement about the new features 
-being introduced, although there were apprehensions about potential customer feedback and support issues post-launch.
-"""
+load_dotenv()
 
-def sentiments(text):
-    # Prepare the results dictionary
-    results = {
-        "overall_emotion": {},
-        "sentence_emotions": []
-    }
-    
-    # Analyze the overall emotion of the meeting summary
-    overall_result = emotion_classifier(text)
-    results["overall_emotion"] = {
-        "label": overall_result[0]['label'],
-        "score": overall_result[0]['score']
-    }
-    
-    # Analyze emotion by sentence
-    sentences = text.split('. ')  # Simple sentence splitter
-    for sentence in sentences:
-        if sentence.strip():
-            sentence_result = emotion_classifier(sentence)
-            results["sentence_emotions"].append({
-                "sentence": sentence,
-                "emotion": {
-                    "label": sentence_result[0]['label'],
-                    "score": sentence_result[0]['score']
-                }
-            })
+API_URL = 'https://api-inference.huggingface.co/models/bhadresh-savani/distilbert-base-uncased-emotion'
+headers = {
+    'Authorization': f'Bearer {os.environ.get('HF_TOKEN')}'
+}
 
-    # Convert results to JSON
-    json_results = json.dumps(results)
-    print(json_results)
-    return json_results
+def query(text: str):
+    payload = {'inputs': text}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response.json()
 
-# Call the function with the summarized transcript
-sentiments(meeting_summary)
+# ✅ Example usage
+if __name__ == '__main__':
+    input_text = 'The team is excited but nervous about the launch.'
+    result = query(input_text)
+    print(json.dumps(result, indent=2))
